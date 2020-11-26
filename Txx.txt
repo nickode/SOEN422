@@ -1,0 +1,36 @@
+Test 01: Value Types (Literals)
+-128|127|127|127|000DECAF|0000AB8D|0|9|a|A|10|10|10|10|10|false|true
+-128|127|127|127|000DECAF|0000AB8D|0|9|a|A|10|10|10|10|10|false|true
+Test 02: Conditional Operator
+3|4|5
+3|4|5
+Test 03: Bitwise Operators
+0000005A|00003C5A|00003C00|FFFFFFA5|FFFFC3A5
+0000005A|00003C5A|00003C00|FFFFFFA5|FFFFC3A5
+Test 04: Equality Operators
+false|true
+false|true
+Test 05: Relational Operators
+true|true|false|false
+true|true|false|false
+Test 06: Shift Operators
+FFFFFFA6|FFFFFFD3|0000F168|00001E2D
+FFFFFFA6|FFFFFFD3|0000F168|00001E2D
+Test 07: Extended Bitwise Assignment Operators
+7FFFFFA6|3FFFFFD3|FFFFFD30
+7FFFFFA6|3FFFFFD3|FFFFFD30
+Test 08: Prefix and Postfix Operators
+7778798887
+7778798887
+Test 09: if-else Statement
+9|0|9|0|1|
+9|0|9|0|1|
+Test 10: while Statement - countdown
+9876543210
+9876543210
+Test 11: break Statement
+9876543210
+9876543210
+Test 12: Bit functions
+|00000000|00000004|00000000|00000004|00000001|00000000
+|00000000|00000004|00000000|00000004|00000001|00000000
