@@ -38,4 +38,4 @@ gcc _console.o _cout.o _xtoa.o hal.o ioreg.o out.o vm.o vmstack.o %1.o -o cm.exe
 @for /r "%~dp0" %%x in (*.o) do move "%%x" "%~dp0%objects" >nul
 rem @move "src\cm.exe" . >nul
 
-@echo. Sucessfully compiled Cm VM!
+@echo. ...Done!
