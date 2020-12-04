@@ -10,7 +10,7 @@
 #include <string.h> /* for strtok */
 
 #include "hal.h"
-#include "out.h"
+#include "hal_Out.h"
 #include "vm.h"
 
 #ifdef Dos16
@@ -67,34 +67,32 @@ FILE* file;
 
 /* 1st two bytes are the size (msb:lsb) */
 static bool loadObjFile(FILE* f, u16 maxSize) {
-//     u16 n, size;
-//     u8  buf[2];
+    u16 n, size;
+    u8  buf[2];
 
-//     buf[0] = (u8)fgetc(f);             // Read size.msb
-//     buf[1] = (u8)fgetc(f);             // Read size.msb
-//     size = (u16)((buf[0] << 8) | buf[1]);
+    buf[0] = (u8)fgetc(f);             // Read size.msb
+    buf[1] = (u8)fgetc(f);             // Read size.msb
+    size = (u16)((buf[0] << 8) | buf[1]);
 
-// //t VMOut_PutS("loadObjFile of size = %u\n", (u32)size);
+//t VMOut_PutS("loadObjFile of size = %u\n", (u32)size);
 
-//     if (size <= maxSize) {
-//         for (n = 0; n < size; n++) {
-//             mem[n] = (u8)fgetc(f);
-// #ifdef MONITOR
-//             VMOut_PutS(".");
-//             VMOut_PutS("%02x ", (u8)mem[n]);
-// #endif
-//         }
-//     } else {
-//         VMOut_PutS("Executable file too big (should be <= "); VMOut_PutU((u32)maxSize); VMOut_PutS(" bytes).\n");
-//         return false;
-//     }
-//     fclose(f);
-// #ifdef MONITOR
-//     System_putc('\n'); System_putu(size); System_puts(" bytes loaded.\n");
-// #endif
-//     return true;
-static u8 mem[] = { 0xD9, 0x7F, 0xFF, 0x82, 0x00 };
-
+    if (size <= maxSize) {
+        for (n = 0; n < size; n++) {
+            mem[n] = (u8)fgetc(f);
+#ifdef MONITOR
+            VMOut_PutS(".");
+            VMOut_PutS("%02x ", (u8)mem[n]);
+#endif
+        }
+    } else {
+        VMOut_PutS("Executable file too big (should be <= "); VMOut_PutU((u32)maxSize); VMOut_PutS(" bytes).\n");
+        return false;
+    }
+    fclose(f);
+#ifdef MONITOR
+    System_putc('\n'); System_putu(size); System_puts(" bytes loaded.\n");
+#endif
+    return true;
 }
 
 // Returns the filename extention.
