@@ -36,7 +36,7 @@ static void COut_Init(void) {
   UBRR0H = (uint8_t)(BAUD_PRESCALLER >> 8);          //write higher baud byte
   
   UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);	//set frame character size to 8 data bits + 1 stop bit
-  UCSR0B |= (1 << TXEN0);      				//enable transmitter and reciever
+  UCSR0B |= (1 << TXEN0);      				//enable transmitter
 }
 
 static void COut_PutB(bool b)        { Console_Putchar(b ? 'T' : 'F'); }
