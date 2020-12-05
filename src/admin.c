@@ -124,9 +124,10 @@ int main(int argc, char* argv[]) {
 //t VMOut_PutS("argv[0] = [%s]\n", argv[0]);
 //t VMOut_PutS("argv[1] = [%s]\n", argv[1]);
 
+    COut_Init();
     // Do Hal_Init() before any option messages.
     Hal_Init();
-
+    
     // ********* Important to adjust memory before loading the file in memory.
 //t    VMOut_PutS("GetBaseAddr(): sizeof u8* = "); VMOut_PutI((i32)sizeof(u8*)); VMOut_PutN();
 //t    VMOut_PutS("GetBaseAddr(): sizeof u32 = "); VMOut_PutI((i32)sizeof(u32)); VMOut_PutN();
@@ -183,13 +184,28 @@ int main(int argc, char* argv[]) {
             Usage();
             return -3;
         }
+
     } else {
         VMOut_PutS("Error: Must have a file to load.\n");
         Usage();
         return -4;
     }
 
-    VM_Init(mem);
-    VM_execute(mem);
+    while (1) {
+        if ((status = hal_Loader(mem)) == Success) {
+            DisplayBanner();
+            VM_Init(mem);
+            VM_execute(mem);
+
+            // Send an Ack to tell the Host that program's execution is done.
+            VMOut_PutC((char)Ack);
+            VMOut_PutC((char)0);
+        }
+        else {
+            VMOut_PutS("Loader error: "); VMOut_PutX(status); VMOut_PutN();
+            return -1;
+        }
+    }
+
     return 0;
 }
