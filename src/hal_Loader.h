@@ -8,6 +8,6 @@
 
 #include "_out.h"
 
-bool hal_Loader(u8 mem); // If true, loading was successful.
+bool hal_Loader(FILE* file, u8 mem); // If true, loading was successful.
 
 #endif
