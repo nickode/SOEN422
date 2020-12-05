@@ -21,7 +21,7 @@
 static void TxChar(char c) {
   //Added by Pierre-Alexis Barras
   while( !(UCSR0A & (1 << UDRE0)) );	//wait for transmit buffer to be empty
-  UDR0 = c;                     		//iterate over string
+  UDR0 = c;                     		//load character and transmit
 }
 
 // From '_console.c'
