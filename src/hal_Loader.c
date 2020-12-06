@@ -1,11 +1,30 @@
 // File added by Nicolas Samaha
 #include "hal_Loader.h"
 #include <avr/io.h>
-#include <avr/interrupt.h>
 
 static bool hal_Loader(u8 &mem)
 {
-	char c = VMIn_GetByte();
+	while (memWritePos < 11)
+	{
+		// Read the next byte
+		char c = VMIn_GetByte();
+
+		// Check if non-zero and currently reading packet
+		if (c != 0x00 && readingPacket == false)
+		{
+			readingPacket = true;
+			mem[memWritePos++] = c;
+		}
+		else if (c == 0x00 && readingPacket == true)
+		{
+			readingPacket = false;
+			return Success;
+		}
+		
+	}
+
+	// if bigger than 11 bytes, wrong command.
+	return InvalidCmd;
 }
 
 // Initialize receiver and stop flag bit for UART
@@ -20,16 +39,4 @@ char VMIn_GetByte()
 	while (!(UCSR0A & (1 << RXC0))); // Wait for byte to be received
 	char rxByte = UDR0;
 	return rxByte;
-}
-
-ISR(USART_RX_vect)
-{
-    rxBuffer[rxWritePos] = UDR0;
-
-    rxWritePos++;
-
-    if (rxWritePos >= RX_BUFFER_SIZE)
-    {
-        rxWritePos = 0;
-    }
 }

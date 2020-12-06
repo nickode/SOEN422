@@ -37,6 +37,8 @@
 #define Version     " v0.1.00.1101a "    
 #define Copyright   "Copyright (c) 2001-2020  Michel de Champlain"
 
+enum Status { Success = 0x40, UnknownCmd, InvalidCmd, InvalidAddr, ChecksumInvalid  };
+
 // Banner = VMname AppSuffix Version Copyright
 static void DisplayBanner() {
     VMOut_PutS(VMName); VMOut_PutS(AppSuffix); VMOut_PutS(Version); VMOut_PutS(Target); VMOut_PutN();
@@ -195,7 +197,7 @@ int main(int argc, char* argv[]) {
     }
 
     while (1) {
-        if ((status = hal_Loader(mem)) == true) {
+        if ((status = hal_Loader(mem)) == Success) {
             DisplayBanner();
             VM_Init(mem);
             VM_execute(mem);
