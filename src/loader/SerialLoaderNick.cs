@@ -1,5 +1,12 @@
 /*
- * SerialLoader.cs - Nicolas Samaha
+ * SerialLoader.cs - Nicolas Samaha 
+ * 
+ * Code is done, I just cant compile because of some minor type issues. Will fi
+ * 
+ * TODO:
+ * 
+ * - FIX COMPILATION ISSUES
+ * - TEST WITH SAMPLE.
  */
 
 using System;
@@ -85,6 +92,7 @@ public static void Main(string[] args)
         sendDataPacketFile[n] = buf[n];
     }
 
+    // Create a new thread for reading bytes and create string comparer for CMD
     StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
     Thread readThread = new Thread(ReadByte);
 
@@ -99,7 +107,7 @@ public static void Main(string[] args)
     serialPort.ReadTimeout = 500;
     serialPort.WriteTimeout = 500;
 
-    // Open port on Nano
+    // Open port on Nano and set flags to default values
     serialPort.Open();
     _continue = true;
     _run = false;
