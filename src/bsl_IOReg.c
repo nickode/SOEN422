@@ -7,13 +7,13 @@
 
 #include "bsl_IOReg.h"
 
-//Return value found at inputted address
+//Return value found at given address
 u32  bsl_IOReg_Read (u32 ioreg){
 	char * p = (char *) ioreg;	//find register via pointer
 	return p[0];	//return value from register
 }
 
-//write value found at inputted address
+//Write value found at given address
 void bsl_IOReg_Write(u32 ioreg, u32 value){
 	char * p = (char *) ioreg;	//find register via pointer
 	p[0] = value;	//write value to register
