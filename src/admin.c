@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     }
 
     while (1) {
-        if ((status = hal_Loader(file, mem)) == Success) {
+        if ((status = hal_Loader(mem)) == true) {
             DisplayBanner();
             VM_Init(mem);
             VM_execute(mem);
