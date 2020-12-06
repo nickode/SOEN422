@@ -9,6 +9,8 @@
 
 enum Status { SUCCESS = 0x40, UNKNOWN_COMMAND, INVALID_COMMAND, INVALID_ADDRESS, MEMORY_FAILED, CHECKSUM_INVALID };
 
+enum Cmd {CMD_BEGIN = 0x20, PING = CMD_BEGIN, DOWNLOAD, RUN, GET_STATUS, SEND_DATA, RESET, CMD_END};
+
 #include "_out.h"
 
 bool hal_Loader(FILE* file, u8 mem); // If true, loading was successful.
