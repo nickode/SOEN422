@@ -9,8 +9,6 @@
 #define __hal_h
 
 #include "_out.h"
-#include "hal_Out.h"
-#include "hal_Loader.h"
 
 void Hal_Init(void);
 

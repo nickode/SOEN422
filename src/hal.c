@@ -6,7 +6,6 @@
 
 #include "hal.h"
 #include "hal_Out.h"
-#include "hal_Loader.h"
 
 void Hal_Init(void) {
     VMOut_Init(Out_GetFactory("")); // "" to save space, later should be "console".

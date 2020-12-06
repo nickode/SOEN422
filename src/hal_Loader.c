@@ -2,7 +2,7 @@
 #include "hal_Loader.h"
 #include <avr/io.h>
 
-static bool hal_Loader(u8 mem)
+static bool hal_Loader(u8* mem)
 {
 	while (memWritePos < 11)
 	{
@@ -18,12 +18,13 @@ static bool hal_Loader(u8 mem)
 		else if (c == 0x00 && readingPacket == true)
 		{
 			readingPacket = false;
+			memWritePos = 0;
 			return Success;
 		}
 		
 	}
 
-	// if bigger than 11 bytes, wrong command.
+	// if bigger than 11 bytes, invalid command.
 	return InvalidCmd;
 }
 
