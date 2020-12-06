@@ -13,6 +13,8 @@
 #include "hal_Out.h"
 #include "vm.h"
 
+#include "hal_Loader.h"
+
 #ifdef Dos16
 #define Target      "(Dos16)"
 #elif defined(Arm7)
@@ -50,6 +52,7 @@ static void Usage() {
 #define MemAllocated  (4096+1024)
 /*public*/  u8*    mem;
 /*public*/  u8     memAllocated[MemAllocated];
+bool status;
 
 // To get the base RAM address on a memory segment increment.
 static u8* GetBaseAddr(u8* memAddr, u32 memInc) {
@@ -198,7 +201,7 @@ int main(int argc, char* argv[]) {
             VM_execute(mem);
 
             // Send an Ack to tell the Host that program's execution is done.
-            VMOut_PutC((char)Ack);
+            VMOut_PutC((char)ACK);
             VMOut_PutC((char)0);
         }
         else {
