@@ -21,40 +21,96 @@ class SerialPortStruct
      public static bool _run;
      public static bool _reading;
      public static SerialPort serialPort;
-}
 
-/**
+    /**
  * GetCode()
  * 
  * Usage: Used to convert a .exe file into an array of bytes which can be transmitted as packets to the serial target.
  * 
  * Copyright (C) 2020 by Michel de Champlain
  */
-public static byte[] GetCode(String exeFilename)
-{
-    // Read the file into a byte array.
-    var fs = new FileStream(exeFilename, FileMode.Open);
-    var fileLength = (int)fs.Length;
-    var filePgmSize = fileLength - 2;
-    var bufferLength = 3 + filePgmSize + 1; // [size|cksm|cmd(3) + pgm(6) + zero(1)]
-    var buffer = new byte[bufferLength];
-
-    // Read the first two bytes to skip the size of the executable.
-    fs.Read(buffer, 0, 2);
-
-    // Get only the executable code in the buffer starting at index 3.
-    fs.Read(buffer, 3, filePgmSize);
-    buffer[0] = (byte)bufferLength;
-    buffer[2] = (byte)Cmd.SendData;
-
-    byte checksum = buffer[2];
-    // Calculate the checksum for range [2..n-1]
-    for (int n = 3; n < bufferLength; ++n)
+    public static byte[] GetCode(String exeFilename)
     {
-        checksum += buffer[n];
+        // Read the file into a byte array.
+        var fs = new FileStream(exeFilename, FileMode.Open);
+        var fileLength = (int)fs.Length;
+        var filePgmSize = fileLength - 2;
+        var bufferLength = 3 + filePgmSize + 1; // [size|cksm|cmd(3) + pgm(6) + zero(1)]
+        var buffer = new byte[bufferLength];
+
+        // Read the first two bytes to skip the size of the executable.
+        fs.Read(buffer, 0, 2);
+
+        // Get only the executable code in the buffer starting at index 3.
+        fs.Read(buffer, 3, filePgmSize);
+        buffer[0] = (byte)bufferLength;
+        buffer[2] = (byte)Cmd.SendData;
+
+        byte checksum = buffer[2];
+        // Calculate the checksum for range [2..n-1]
+        for (int n = 3; n < bufferLength; ++n)
+        {
+            checksum += buffer[n];
+        }
+        buffer[1] = checksum;
+        return buffer;
     }
-    buffer[1] = checksum;
-    return buffer;
+
+    /**
+     * ReadByte()
+     * 
+     * Usage: Simultaneously read bytes being received by the Nano during runtime
+     * 
+     * Copyright (C) 2020 by Michel de Champlain
+     */
+    public static void ReadByte()
+    {
+        while (_continue)
+        {
+            try
+            {
+                int size = serialPort.Read(buffer, 0, 1);
+                if (buffer[0] != 0)
+                {
+                    do
+                    {
+                        if (!_run && (buffer[0] == Ack))
+                        {
+                            size = serialPort.Read(buffer, 0, 1); // read the zero
+                            Console.Write("Ack from target\n$ ");
+                            break;
+                        }
+
+                        if (_run && (buffer[0] == Ack))
+                        {
+                            size = serialPort.Read(buffer, 0, 1); // read the zero
+                            Console.Write("Ack from target. Run!\n");
+                            break;
+                        }
+                        size = serialPort.Read(buffer, 0, 1);
+                    } while ((buffer[0] != 0));
+                }
+
+                if (_run)
+                {
+                    while (true)
+                    {
+                        size = serialPort.Read(buffer, 0, 1);
+
+                        if (buffer[0] == Ack)
+                        {
+                            size = serialPort.Read(buffer, 0, 1); // read the zero
+                            break;
+                        }
+                        Console.Write((char)buffer[0]);
+                    }
+                    _run = false;
+                    Console.Write("$ ");
+                }
+            }
+            catch (TimeoutException) { }
+        }
+    }
 }
 
 public static void Main(string[] args)
@@ -161,58 +217,3 @@ public static void Main(string[] args)
 
 }   
 
-/**
- * ReadByte()
- * 
- * Usage: Simultaneously read bytes being received by the Nano during runtime
- * 
- * Copyright (C) 2020 by Michel de Champlain
- */
-public static void ReadByte()
-{
-    while (_continue)
-    {
-        try
-        {
-            int size = serialPort.Read(buffer, 0, 1);
-            if (buffer[0] != 0)
-            {
-                do
-                {
-                    if (!_run && (buffer[0] == Ack))
-                    {
-                        size = serialPort.Read(buffer, 0, 1); // read the zero
-                        Console.Write("Ack from target\n$ ");
-                        break;
-                    }
-
-                    if (_run && (buffer[0] == Ack))
-                    {
-                        size = serialPort.Read(buffer, 0, 1); // read the zero
-                        Console.Write("Ack from target. Run!\n");
-                        break;
-                    }
-                    size = serialPort.Read(buffer, 0, 1);
-                } while ((buffer[0] != 0));
-            }
-
-            if (_run)
-            {
-                while (true)
-                {
-                    size = serialPort.Read(buffer, 0, 1);
-
-                    if (buffer[0] == Ack)
-                    {
-                        size = serialPort.Read(buffer, 0, 1); // read the zero
-                        break;
-                    }
-                    Console.Write((char)buffer[0]);
-                }
-                _run = false;
-                Console.Write("$ ");
-            }
-        }
-        catch (TimeoutException) { }
-    }
-}
