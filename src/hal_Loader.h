@@ -5,6 +5,9 @@
 
 #define ACK 0xCC
 #define NAK 0x33
+#define PACKET_SIZE 11
+
+enum Status { SUCCESS = 0x40, UNKNOWN_COMMAND, INVALID_COMMAND, INVALID_ADDRESS, MEMORY_FAILED, CHECKSUM_INVALID };
 
 #include "_out.h"
 
