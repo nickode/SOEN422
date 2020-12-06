@@ -17,6 +17,10 @@
 #endif
 #define BAUD_PRESCALLER (((F_CPU / (BAUDRATE * 16UL))) - 1)
 
+// Added by Nicolas Samaha
+static char rxBuffer[8];
+static u8 rxWritePos;
+
 // Transmit a character to UART.
 static void TxChar(char c) {
   //Added by Pierre-Alexis Barras
@@ -31,12 +35,14 @@ static char buf[12];    // Buffer reserved for conversion to ascii characters.
                         // Need to cover max size (12) on a "i32" (sign + 10 chars + null)
 
 static void COut_Init(void) {
-  //Added by Pierre-Alexis Barras
+  //Added by Pierre-Alexis Barras & Nicolas Samaha
   UBRR0L = (uint8_t)(BAUD_PRESCALLER & 0xFF);        //write lower baud byte
   UBRR0H = (uint8_t)(BAUD_PRESCALLER >> 8);          //write higher baud byte
   
   UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);	//set frame character size to 8 data bits + 1 stop bit
-  UCSR0B |= (1 << TXEN0) | (1 << RXEN0);    //enable transmitter and reciever
+  UCSR0B |= (1 << TXEN0) //enable transmitter bit.
+
+  sei();
 }
 
 static void COut_PutB(bool b)        { Console_Putchar(b ? 'T' : 'F'); }
@@ -67,6 +73,34 @@ IOut Out_GetFactory(const char* whichOne) {
         init = true;
     }
     return &cout;
+}
+
+void getByte(void)
+{
+    char ret = '\0';
+
+    if (rxReadPos != rxWritePos)
+    {
+        ret = rxBuffer[rxReadPos];
+        rxReadPos++;
+
+        if (rxReadPos >= 8)
+        {
+
+        }
+    }
+}
+
+ISR(USART_RX_vect)
+{
+    rxBuffer[rxWritePos] = UDR0;
+
+    rxWritePos++;
+
+    if (rxWritePos >= RX_BUFFER_SIZE)
+    {
+        rxWritePos = 0;
+    }
 }
 
 //---------------------------------[ Example of a private unit testing ]--------------

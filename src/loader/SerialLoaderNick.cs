@@ -8,10 +8,13 @@ using System.IO.Ports;
 using System.Threading;
 
 // Flags and the SerialPort object
-static bool _continue;
-static bool _run;
-static bool _reading;
-static SerialPort serialPort;
+class SerialPortStruct
+{
+     public static bool _continue;
+     public static bool _run;
+     public static bool _reading;
+     public static SerialPort serialPort;
+}
 
 /**
  * GetCode()
@@ -20,7 +23,7 @@ static SerialPort serialPort;
  * 
  * Copyright (C) 2020 by Michel de Champlain
  */
-static byte[] GetCode(string exeFilename)
+public static byte[] GetCode(String exeFilename)
 {
     // Read the file into a byte array.
     var fs = new FileStream(exeFilename, FileMode.Open);
@@ -107,6 +110,47 @@ public static void Main(string[] args)
 
     Console.WriteLine("Serial Loader Started on" + serialPort.PortName);
     Console.WriteLine("Loading file: " + args[0]);
+    
+    // Current command on CMD
+    string cmd;
+
+    // Send cmd to target using a command prompt (for debugging purpose).
+    Console.Write("$ ");
+    while (_continue)
+    {
+        cmd = Console.ReadLine();
+
+        if (stringComparer.Equals("q", cmd))
+        {
+            _continue = false;
+        }
+        else if (stringComparer.Equals("p", cmd))
+        { // ping
+            _serialPort.Write(pingPacket, 0, 4);
+        }
+        else if (stringComparer.Equals("s", cmd))
+        { // getStatus
+            _serialPort.Write(getStatusPacket, 0, 4);
+        }
+        else if (stringComparer.Equals("d", cmd))
+        { // download (sendData - small pgm)
+            serialPort.Write(sendDataPacketFile, 0, sendDataPacketFile.Length);
+        }
+        else if (stringComparer.Equals("r", cmd))
+        { // run
+            serialPort.Write(runPacket, 0, 4);
+            _run = true;
+        }
+        else
+        {
+            serialPort.Write(pingPacketChecksumInvalid, 0, 4);
+        }
+    }
+
+    Console.WriteLine("bye!");
+    readThread.Join();
+    serialPort.Close();
+
 }   
 
 /**
