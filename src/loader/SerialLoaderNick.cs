@@ -1,6 +1,7 @@
 /*
- * SerialLoader.cs - Nicolas Samaha 
+ * SerialLoader.cs - Nicolas Samaha.
  * 
+ * This program contains reference code extracted from Michel de Champlain's SerialLoader.cs that was provided.
  */
 
 using System;
@@ -10,10 +11,30 @@ using System.Threading;
 
 public class SerialPortCommunication
 {
-     public static bool _continue;
-     public static bool _run;
-     public static bool _reading;
-     public static SerialPort serialPort;
+    // Error checking bytes
+    private const byte ACK = 0xCC;
+    private const byte NAK = 0x33;
+    private const byte PACKET_SIZE = 11;
+
+    public static bool _continue;
+    public static bool _run;
+    public static bool _reading;
+    public static SerialPort serialPort;
+
+    // Define Status and Command enums
+    private enum Status : byte { SUCCESS = 0x40, UNKNOWN_CMD, INVALID_CMD, INVALID_ADDR, MEMORY_FAILED, CHECKSUM_INVALID }
+    private enum Cmd : byte { CMD_BEGIN = 0x20, PING = CMD_BEGIN, DOWNLOAD, RUN, GET_STATUS, SEND_DATA, RESET, CMD_END }
+
+    // Define packet structures to be sent
+    public static byte[] pingPacketChecksumInvalid = { 0x03, 0xee, (byte)Cmd.PING, 0 };
+    public static byte[] pingPacket = { 0x03, 0x20, (byte)Cmd.PING, 0 };
+    public static byte[] getStatusPacket = { 0x03, 0x23, (byte)Cmd.GET_STATUS, 0 };
+    public static byte[] sendDataPacket = { 0x09, 0xBC, 0x24, 0x91, 0xFF, 0x82, 0xFF, 0x87, 0x00, 0 };
+    public static byte[] runPacket = { 0x03, 0x22, (byte)Cmd.RUN, 0 };
+
+    // Define read buffer
+    static byte[] buffer = new byte[12];
+
 
      /**
      * GetCode()
@@ -37,7 +58,7 @@ public class SerialPortCommunication
         // Get only the executable code in the buffer starting at index 3.
         fs.Read(buffer, 3, filePgmSize);
         buffer[0] = (byte)bufferLength;
-        buffer[2] = (byte)Cmd.SendData;
+        buffer[2] = (byte)Cmd.SEND_DATA;
 
         byte checksum = buffer[2];
         // Calculate the checksum for range [2..n-1]
@@ -67,14 +88,14 @@ public class SerialPortCommunication
                 {
                     do
                     {
-                        if (!_run && (buffer[0] == Ack))
+                        if (!_run && (buffer[0] == ACK))
                         {
                             size = serialPort.Read(buffer, 0, 1); // read the zero
                             Console.Write("Ack from target\n$ ");
                             break;
                         }
 
-                        if (_run && (buffer[0] == Ack))
+                        if (_run && (buffer[0] == ACK))
                         {
                             size = serialPort.Read(buffer, 0, 1); // read the zero
                             Console.Write("Ack from target. Run!\n");
@@ -90,7 +111,7 @@ public class SerialPortCommunication
                     {
                         size = serialPort.Read(buffer, 0, 1);
 
-                        if (buffer[0] == Ack)
+                        if (buffer[0] == ACK)
                         {
                             size = serialPort.Read(buffer, 0, 1); // read the zero
                             break;
@@ -107,107 +128,88 @@ public class SerialPortCommunication
 
     public static void Main(string[] args)
     {
-    // Error checking bytes
-    const byte ACK = 0xCC;
-    const byte NAK = 0x33;
-    const byte PACKET_SIZE = 11;
+        // Check if run with a file argument.
+        if (args.Length != 1)
+        {
+            Console.WriteLine("Must have atleast 1 argument... (Usage: SerialLoader.exe <file.exe>)");
+            return;
+        }
 
-    // Define Status and Command enums
-    enum Status : byte { SUCCESS = 0x40, UNKNOWN_CMD, INVALID_CMD, INVALID_ADDR, MEMORY_FAILED, CHECKSUM_INVALID }
-    enum Cmd : byte { CMD_BEGIN = 0x20, PING = CMD_BEGIN, DOWNLOAD, RUN, GET_STATUS, SEND_DATA, RESET, CMD_END }
+        // Extract the .exe into sequence of bytes
+        var buf = GetCode(args[0]);
+        byte[] sendDataPacketFile = new byte[buf.Length];
 
-    // Define packet structures to be sent
-    static byte[] pingPacketChecksumInvalid = { 0x03, 0xee, (byte)Cmd.PING, 0 };
-    static byte[] pingPacket = { 0x03, 0x20, (byte)Cmd.PING, 0 };
-    static byte[] getStatusPacket = { 0x03, 0x23, (byte)Cmd.GET_STATUS, 0 };
-    static byte[] sendDataPacket = { 0x09, 0xBC, 0x24, 0x91, 0xFF, 0x82, 0xFF, 0x87, 0x00, 0 };
-    static byte[] runPacket = { 0x03, 0x22, (byte)Cmd.RUN, 0 };
+        for (int n = 0; n < buf.Length; ++n)
+        {
+            sendDataPacketFile[n] = buf[n];
+        }
 
-    // Read buffer
-    static byte[] buffer = new byte[12];
+        // Create a new thread for reading bytes and create string comparer for CMD
+        StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
+        Thread readThread = new Thread(ReadByte);
 
-    if (args.Length != 1)
-    {
-        Console.WriteLine("Must have atleast 1 argument... (Usage: SerialLoader.exe <file.exe>)");
-        return;
-    }
+        // Create SerialPort with Nano settings in order to prepare communication
+        serialPort = new SerialPort();
+        serialPort.PortName = "COM4";
+        serialPort.BaudRate = 9600; ;
+        serialPort.Parity = Parity.None;
+        serialPort.DataBits = 8;
+        serialPort.StopBits = StopBits.One;
+        serialPort.Handshake = Handshake.None;
+        serialPort.ReadTimeout = 500;
+        serialPort.WriteTimeout = 500;
 
-string testFileName = args[0];
-var buf = GetCode(exeFilename);
-byte[] sendDataPacketFile = new byte[buf.Length];
+        // Open port on Nano and set flags to default values
+        serialPort.Open();
+        _continue = true;
+        _run = false;
 
-for (int n = 0; n < buf.Length; ++n)
-{
-    sendDataPacketFile[n] = buf[n];
-}
+        // Start thread for reading bytes coming from Nano
+        readThread.Start();
 
-// Create a new thread for reading bytes and create string comparer for CMD
-StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
-Thread readThread = new Thread(ReadByte);
+        Console.WriteLine("Serial Loader Started on " + serialPort.PortName);
+        Console.WriteLine("Loading file: " + args[0]);
 
-// Create SerialPort with Nano settings
-serialPort = new SerialPort();
-serialPort.PortName = "COM11";
-serialPort.BaudRate = 9600; ;
-serialPort.Parity = Parity.None;
-serialPort.DataBits = 8;
-serialPort.StopBits = StopBits.One;
-serialPort.Handshake = Handshake.None;
-serialPort.ReadTimeout = 500;
-serialPort.WriteTimeout = 500;
+        // Current command on CMD
+        string cmd;
 
-// Open port on Nano and set flags to default values
-serialPort.Open();
-_continue = true;
-_run = false;
+        // Send commands to target using command prompt (inspired by Michel).
+        Console.Write("$ ");
+        while (_continue)
+        {
+            cmd = Console.ReadLine();
 
-// Start thread for reading bytes coming from Nano
-readThread.Start();
+            if (stringComparer.Equals("q", cmd))
+            {
+                _continue = false;
+            }
+            else if (stringComparer.Equals("p", cmd))
+            { 
+                serialPort.Write(pingPacket, 0, 4);
+            }
+            else if (stringComparer.Equals("s", cmd))
+            { 
+                serialPort.Write(getStatusPacket, 0, 4);
+            }
+            else if (stringComparer.Equals("d", cmd))
+            { 
+                serialPort.Write(sendDataPacketFile, 0, sendDataPacketFile.Length);
+            }
+            else if (stringComparer.Equals("r", cmd))
+            { 
+                serialPort.Write(runPacket, 0, 4);
+                _run = true;
+            }
+            else
+            {
+                serialPort.Write(pingPacketChecksumInvalid, 0, 4);
+            }
+        }
+        Console.WriteLine("Closing loader...");
+        readThread.Join();
+        serialPort.Close();
 
-Console.WriteLine("Serial Loader Started on " + serialPort.PortName);
-Console.WriteLine("Loading file: " + args[0]);
-
-// Current command on CMD
-string cmd;
-
-// Send cmd to target using a command prompt (for debugging purpose).
-Console.Write("$ ");
-while (_continue)
-{
-    cmd = Console.ReadLine();
-
-    if (stringComparer.Equals("q", cmd))
-    {
-        _continue = false;
-    }
-    else if (stringComparer.Equals("p", cmd))
-    { // ping
-        _serialPort.Write(pingPacket, 0, 4);
-    }
-    else if (stringComparer.Equals("s", cmd))
-    { // getStatus
-        _serialPort.Write(getStatusPacket, 0, 4);
-    }
-    else if (stringComparer.Equals("d", cmd))
-    { // download (sendData - small pgm)
-        serialPort.Write(sendDataPacketFile, 0, sendDataPacketFile.Length);
-    }
-    else if (stringComparer.Equals("r", cmd))
-    { // run
-        serialPort.Write(runPacket, 0, 4);
-        _run = true;
-    }
-    else
-    {
-        serialPort.Write(pingPacketChecksumInvalid, 0, 4);
-    }
-}
-
-Console.WriteLine("bye!");
-readThread.Join();
-serialPort.Close();
-
-}   
+    }   
 }
 
 

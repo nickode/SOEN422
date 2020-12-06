@@ -15,6 +15,6 @@ void VMIn_Init();
 
 char VMIn_GetByte();
 
-static bool hal_Loader(u8 &mem);
+static bool hal_Loader(u8 mem);
 
 #endif

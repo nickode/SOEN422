@@ -37,8 +37,6 @@
 #define Version     " v0.1.00.1101a "    
 #define Copyright   "Copyright (c) 2001-2020  Michel de Champlain"
 
-enum Status { Success = 0x40, UnknownCmd, InvalidCmd, InvalidAddr, ChecksumInvalid  };
-
 // Banner = VMname AppSuffix Version Copyright
 static void DisplayBanner() {
     VMOut_PutS(VMName); VMOut_PutS(AppSuffix); VMOut_PutS(Version); VMOut_PutS(Target); VMOut_PutN();
@@ -129,7 +127,6 @@ int main(int argc, char* argv[]) {
 //t VMOut_PutS("argv[0] = [%s]\n", argv[0]);
 //t VMOut_PutS("argv[1] = [%s]\n", argv[1]);
 
-    COut_Init();
     // Do Hal_Init() before any option messages.
     Hal_Init();
     
@@ -141,60 +138,6 @@ int main(int argc, char* argv[]) {
 //t    VMOut_PutS("Admin: memAllocated = "); VMOut_PutX((u32)memAllocated); VMOut_PutN();
 //t    VMOut_PutS("Admin: mem          = "); VMOut_PutX((u32)mem); VMOut_PutN();
 
-    /* Parse options */
-    for (; i < argc; i++) {
-        if ( (strcmp(argv[i], "-?") == 0) || (strcmp(argv[i], "-help") == 0) ) {
-            Usage();
-            return 0;
-        } else if (strcmp(argv[i], "-v") == 0) {
-            DisplayBanner();
-            return 0;
-        } else {
-            break;
-        }
-    }
-
-    /* Parse file */
-    if (i == argc-1) {
-        char *pfile;
-
-        strcpy(filename, argv[i]);   /* save name and extension */
-//t        VMOut_PutS("Parse file: Filename: '%s'\n", filename);
-
-        name = GetFileName(filename);
-        ext  = GetFilenameExt(filename);
-        strcpy(filename, name);
-
-//t        VMOut_PutS("Filename: '%s' Name: '%s' Ext: '%s':\n", filename, name, ext);
-
-        if (ext && (strcmp(ext, "exe") == 0)) {  /* 3 characters extension maximum */
-            char pb[50];
-
-            strcpy(pb, "");
-            pfile = strcat(pb, filename);
-
-//t            VMOut_PutS("fopen: Filename: '%s'\n", pfile);
-
-            file = fopen(pfile, "rb" );
-            if (file == NULL) {
-                VMOut_PutS(filename); VMOut_PutS(" does not exist.\n");
-                return -1;
-            }
-
-            if (!loadObjFile(file, MemMax)) { // not a success because too big
-                return -2;
-            }
-        } else {
-            VMOut_PutS("Error: Must have a file with '.exe' extension.\n");
-            Usage();
-            return -3;
-        }
-
-    } else {
-        VMOut_PutS("Error: Must have a file to load.\n");
-        Usage();
-        return -4;
-    }
 
     while (1) {
         if ((status = hal_Loader(mem)) == Success) {

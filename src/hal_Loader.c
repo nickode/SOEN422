@@ -2,7 +2,7 @@
 #include "hal_Loader.h"
 #include <avr/io.h>
 
-static bool hal_Loader(u8 &mem)
+static bool hal_Loader(u8 mem)
 {
 	while (memWritePos < 11)
 	{
@@ -31,6 +31,7 @@ static bool hal_Loader(u8 &mem)
 void VMIn_Init()
 {
 	UCSR0B |= (1 << RXEN0) | (1 << RXCIE0); // Enable Receiver bit and Stop flag bit
+	sei();
 }
 
 // Function for receiving transmitted byte/char from the serial port.
