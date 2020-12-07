@@ -30,7 +30,7 @@ static char buf[12];    // Buffer reserved for conversion to ascii characters.
                         // Need to cover max size (12) on a "i32" (sign + 10 chars + null)
 
 static void COut_Init(void) {
-  //Added by Pierre-Alexis Barras & Nicolas Samaha
+  //Added by Pierre-Alexis Barras
   UBRR0L = (uint8_t)(BAUD_PRESCALLER & 0xFF);        //write lower baud byte
   UBRR0H = (uint8_t)(BAUD_PRESCALLER >> 8);          //write higher baud byte
   

@@ -3,7 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-static bool hal_Loader(u8* mem)
+bool hal_Loader(u8* mem)
 {
 	while (memWritePos < 512)
 	{
