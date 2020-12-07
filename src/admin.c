@@ -13,6 +13,8 @@
 #include "hal_Out.h"
 #include "vm.h"
 
+#include "hal_Loader.h"
+
 #ifdef Dos16
 #define Target      "(Dos16)"
 #elif defined(Arm7)
@@ -50,6 +52,7 @@ static void Usage() {
 #define MemAllocated  (4096+1024)
 /*public*/  u8*    mem;
 /*public*/  u8     memAllocated[MemAllocated];
+bool status;
 
 // To get the base RAM address on a memory segment increment.
 static u8* GetBaseAddr(u8* memAddr, u32 memInc) {
@@ -126,7 +129,8 @@ int main(int argc, char* argv[]) {
 
     // Do Hal_Init() before any option messages.
     Hal_Init();
-
+    VMIn_Init();
+    
     // ********* Important to adjust memory before loading the file in memory.
 //t    VMOut_PutS("GetBaseAddr(): sizeof u8* = "); VMOut_PutI((i32)sizeof(u8*)); VMOut_PutN();
 //t    VMOut_PutS("GetBaseAddr(): sizeof u32 = "); VMOut_PutI((i32)sizeof(u32)); VMOut_PutN();
@@ -135,61 +139,22 @@ int main(int argc, char* argv[]) {
 //t    VMOut_PutS("Admin: memAllocated = "); VMOut_PutX((u32)memAllocated); VMOut_PutN();
 //t    VMOut_PutS("Admin: mem          = "); VMOut_PutX((u32)mem); VMOut_PutN();
 
-    /* Parse options */
-    for (; i < argc; i++) {
-        if ( (strcmp(argv[i], "-?") == 0) || (strcmp(argv[i], "-help") == 0) ) {
-            Usage();
-            return 0;
-        } else if (strcmp(argv[i], "-v") == 0) {
+
+    while (1) {
+        if ((status = hal_Loader(mem)) == Success) {
             DisplayBanner();
-            return 0;
-        } else {
-            break;
+            VM_Init(mem);
+            VM_execute(mem);
+
+            // Send an Ack to tell the Host that program's execution is done.
+            VMOut_PutC((char)ACK);
+            VMOut_PutC((char)0);
+        }
+        else {
+            VMOut_PutS("Loader error: "); VMOut_PutX(status); VMOut_PutN();
+            return -1;
         }
     }
 
-    /* Parse file */
-    if (i == argc-1) {
-        char *pfile;
-
-        strcpy(filename, argv[i]);   /* save name and extension */
-//t        VMOut_PutS("Parse file: Filename: '%s'\n", filename);
-
-        name = GetFileName(filename);
-        ext  = GetFilenameExt(filename);
-        strcpy(filename, name);
-
-//t        VMOut_PutS("Filename: '%s' Name: '%s' Ext: '%s':\n", filename, name, ext);
-
-        if (ext && (strcmp(ext, "exe") == 0)) {  /* 3 characters extension maximum */
-            char pb[50];
-
-            strcpy(pb, "");
-            pfile = strcat(pb, filename);
-
-//t            VMOut_PutS("fopen: Filename: '%s'\n", pfile);
-
-            file = fopen(pfile, "rb" );
-            if (file == NULL) {
-                VMOut_PutS(filename); VMOut_PutS(" does not exist.\n");
-                return -1;
-            }
-
-            if (!loadObjFile(file, MemMax)) { // not a success because too big
-                return -2;
-            }
-        } else {
-            VMOut_PutS("Error: Must have a file with '.exe' extension.\n");
-            Usage();
-            return -3;
-        }
-    } else {
-        VMOut_PutS("Error: Must have a file to load.\n");
-        Usage();
-        return -4;
-    }
-
-    VM_Init(mem);
-    VM_execute(mem);
     return 0;
 }

@@ -39,6 +39,7 @@
 #define AppName     "cm"
 #define Version     " v0.1.00.1101a "
 #define Copyright   "Copyright (c) 2001-2020  Michel de Champlain"
+#define OnHost
 
 // Banner = VMname AppSuffix Version Copyright
 static void DisplayBanner() {
@@ -139,6 +140,7 @@ const char *GetFileName(const char *path) {
 
 int main(int argc, char* argv[]) {
     Hal_Init();
+    COut_Init(); // Initiliaze UART console
     DisplayBanner();
 
 #ifdef MONITOR
@@ -146,6 +148,8 @@ int main(int argc, char* argv[]) {
     VMOut_PutS("sizeof(int) = "); VMOut_PutI((u32)sizeof(int));  VMOut_PutN();
     VMOut_PutS("sizeof(ptr) = "); VMOut_PutI((u32)sizeof(int*)); VMOut_PutN();
 #endif
+
+
 
     VM_Init(mem);
     VM_execute(mem);
