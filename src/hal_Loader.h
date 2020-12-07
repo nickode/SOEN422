@@ -7,14 +7,17 @@
 #define ACK 0xCC
 #define NAK 0x33
 
+enum Command { Ping = 0x20, Download = 0x21, GetStatus = 0x23, SendData = 0x24, Run = 0x22, Reset = 0x25 };
 enum Status { Success = 0x40, UnknownCmd, InvalidCmd, InvalidAddr, ChecksumInvalid };
+
+static bool downloading = false;
 static u8 memWritePos = 0;
-static bool readingPacket = false;
+static u8 packetReadPos = 0;
 
 void VMIn_Init();
 
 char VMIn_GetByte();
 
-static unsigned long hal_Loader(u8* mem);
+unsigned long hal_Loader(u8* mem);
 
 #endif

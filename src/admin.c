@@ -129,6 +129,7 @@ int main(int argc, char* argv[]) {
 
     // Do Hal_Init() before any option messages.
     Hal_Init();
+    VMIn_Init();
     
     // ********* Important to adjust memory before loading the file in memory.
 //t    VMOut_PutS("GetBaseAddr(): sizeof u8* = "); VMOut_PutI((i32)sizeof(u8*)); VMOut_PutN();

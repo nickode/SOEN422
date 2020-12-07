@@ -3,30 +3,59 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-bool hal_Loader(u8* mem)
+unsigned long hal_Loader(u8* mem)
 {
-	while (memWritePos < 512)
-	{
-		// Read the next byte
-		char c = VMIn_GetByte();
+	char c;
 
-		// Check if non-zero and currently reading packet
-		if (c != 0x00 && readingPacket == false)
+	// Reading bytes coming from serial loader
+	while ((c = VMIn_GetByte()) != 0x00)
+	{	
+		// If downloading, fill the memory with program contents
+		if(downloading)
 		{
-			readingPacket = true;
 			mem[memWritePos++] = c;
 		}
-		else if (c == 0x00 && readingPacket == true)
+		// Else, continue filling packet
+		else
 		{
-			readingPacket = false;
-			memWritePos = 0;
-			return Success;
+			packet[packetReadPos++] = c;
+
+			// If downloading, enable the download flag
+			if(packetReadPos == 2 && c == Download)
+			{
+				downloading = true;
+			}
+
+			// If pinging, simply return success
+			if(packetReadPos == 2 && c == Ping)
+			{
+				return Success;
+			}
+
+			// Check if memory contains contents, else return InvalidAddr
+			if(packetReadPos == 2 && c == Run)
+			{
+				if(memWritePos != 0)
+				{
+					return Success;
+				}
+				else
+				{
+					return InvalidAddr;
+				}
+				
+			}
+
 		}
-		
+
 	}
 
-	// if bigger than 11 bytes, invalid command.
-	return InvalidCmd;
+	packetReadPos = 0;
+	memWritePos = 0;
+
+	// Finished receiving via UART
+	return Sucess;
+
 }
 
 // Initialize receiver and stop flag bit for UART
