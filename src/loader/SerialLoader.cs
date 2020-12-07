@@ -29,7 +29,7 @@ public class SerialPortCommunication
     public static byte[] pingPacketChecksumInvalid = { 0x03, 0xee, (byte)Cmd.PING, 0 };
     public static byte[] pingPacket = { 0x03, 0x20, (byte)Cmd.PING, 0 };
     public static byte[] getStatusPacket = { 0x03, 0x23, (byte)Cmd.GET_STATUS, 0 };
-    public static byte[] sendDataPacket = { 0x09, 0xBC, 0x24, 0x91, 0xFF, 0x82, 0xFF, 0x87, 0x00, 0 };
+    //public static byte[] sendDataPacketFile = { 0x09, 0xBC, 0x24, 0x91, 0xFF, 0x82, 0xFF, 0x87, 0x00, 0 };
     public static byte[] runPacket = { 0x03, 0x22, (byte)Cmd.RUN, 0 };
 
     // Define read buffer

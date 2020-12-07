@@ -1,10 +1,11 @@
 // File added by Nicolas Samaha
 #include "hal_Loader.h"
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 static bool hal_Loader(u8* mem)
 {
-	while (memWritePos < 11)
+	while (memWritePos < 512)
 	{
 		// Read the next byte
 		char c = VMIn_GetByte();

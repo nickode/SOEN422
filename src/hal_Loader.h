@@ -8,13 +8,13 @@
 #define NAK 0x33
 
 enum Status { Success = 0x40, UnknownCmd, InvalidCmd, InvalidAddr, ChecksumInvalid };
-u8 memWritePos = 0;
-bool readingPacket = false;
+static u8 memWritePos = 0;
+static bool readingPacket = false;
 
 void VMIn_Init();
 
 char VMIn_GetByte();
 
-static bool hal_Loader(u8* mem);
+static unsigned long hal_Loader(u8* mem);
 
 #endif

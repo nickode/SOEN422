@@ -29,7 +29,7 @@ IF "%2" == "" goto error_compilenotdef
 IF "%2" == "host" goto host_compile
 
 :avr_compile
-avr-gcc -Os -Wall -DF_CPU=16000000UL -mmcu=atmega328p src\%1.c src\hal_loader.c src\vmstack.c src\hal.c src\hal_Out.c src\bsl_COut.c src\bsl_xtoa.c src\vm.c -o cm.o
+avr-gcc -Os -Wall -DF_CPU=16000000UL -mmcu=atmega328p src\%1.c src\hal_Loader.c src\vmstack.c src\hal.c src\hal_Out.c src\bsl_COut.c src\bsl_xtoa.c src\vm.c -o cm.o
 IF %errorlevel% neq 0 exit /b %errorlevel%
 avr-objcopy -O ihex -j .text -j .data cm.o  cm.hex
 IF %errorlevel% neq 0 exit /b %errorlevel%
